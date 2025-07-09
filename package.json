@@ -10,9 +10,9 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"@react95/core": "^9.5.2",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
-		"react95": "^4.0.0",
 		"styled-components": "^6.1.19"
 	},
 	"devDependencies": {

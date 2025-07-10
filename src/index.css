@@ -14,3 +14,13 @@ body,
 	height: 100%;
 	width: 100%;
 }
+
+#root p,
+#root span,
+#root a,
+#root button,
+#root td,
+#root th,
+#root div {
+	font-size: 1.1rem;
+}

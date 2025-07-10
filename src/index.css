@@ -1,9 +1,16 @@
 :root {
-  color-scheme: light dark;
-  background-color: #56A9AA;
+	color-scheme: light dark;
+	background-color: #56a9aa;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+	height: 100%;
+	width: 100%;
 }

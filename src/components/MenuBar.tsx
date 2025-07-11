@@ -3,11 +3,11 @@ import styled from "styled-components";
 
 export function MenuBar() {
 	return (
-		<MenuBarList width="100%" paddingBlock="$4" display="inline-flex">
+		<MenuBarList>
 			<ListItem>
 				File
 				<List>
-					<ListItem>New</ListItem>
+					<ListItem>Import</ListItem>
 					<List.Divider />
 					<ListItem aria-disabled>Create Shortcut</ListItem>
 					<ListItem aria-disabled>Delete</ListItem>
@@ -59,6 +59,9 @@ export function MenuBar() {
 }
 
 const MenuBarList = styled(List)`
+	width: 100%;
+	display: inline-flex;
+	padding: 0;
 	box-shadow: unset;
 
 	& > li:has(ul):after {
@@ -74,7 +77,7 @@ const MenuBarList = styled(List)`
 const ListItem = styled(List.Item)`
 	&& {
 		white-space: nowrap;
-		padding-inline: 0.65rem;
+		padding-inline: 0.7rem;
 	}
 
 	&[aria-disabled] {

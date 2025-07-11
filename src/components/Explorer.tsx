@@ -1,4 +1,4 @@
-import { Button, Frame, TitleBar, Tree } from "@react95/core";
+import { Button, Frame, Modal, TitleBar, Tree } from "@react95/core";
 import {
 	Desktop,
 	Explorer100,
@@ -16,8 +16,16 @@ export function Explorer() {
 	const title = repoDid ? `Exploring ${repoDid}` : "Exploring the ATmosphere";
 
 	return (
-		<Center>
-			<Frame
+		<ModalWithLargeTitleBar
+			icon={<Explorer101 variant="16x16_4" />}
+			title={title}
+			titleBarOptions={[
+				<TitleBarMinimize />,
+				<TitleBarMaximize />,
+				<TitleBarClose />,
+			]}
+		>
+			<ModalContent
 				display="flex"
 				flexDirection="column"
 				bgColor="$material"
@@ -25,23 +33,6 @@ export function Explorer() {
 				w={{ mobile: "90%", tablet: "640px", desktop: "900px" }}
 				h={{ mobile: "90%", tablet: "480px", desktop: "720px" }}
 			>
-				<StyledTitleBar
-					active
-					icon={<Explorer101 variant="16x16_4" />}
-					title={title}
-					alignItems="center"
-					paddingBlock="$12"
-				>
-					<TitleBar.OptionsBox
-						h="100%"
-						display="flex"
-						alignItems="center"
-					>
-						<TitleBarMinimize />
-						<TitleBarMaximize />
-						<TitleBarClose />
-					</TitleBar.OptionsBox>
-				</StyledTitleBar>
 				<MenuBar />
 				<Frame
 					w="100%"
@@ -63,8 +54,8 @@ export function Explorer() {
 					</Frame>
 					<InfoBar />
 				</Frame>
-			</Frame>
-		</Center>
+			</ModalContent>
+		</ModalWithLargeTitleBar>
 	);
 }
 
@@ -227,19 +218,19 @@ function InfoBar() {
 	);
 }
 
-const Center = styled.div`
-	width: 100%;
-	height: 100%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-`;
-
 // @ts-expect-error — React 19 forwardRef type mismatch
-const StyledTitleBar = styled(TitleBar)`
-	height: 1.75rem;
-	padding-inline: 0.25rem;
-	padding-block: 0.25rem;
+const ModalWithLargeTitleBar = styled(Modal)`
+	& > .draggable {
+		height: 1.75rem;
+		padding-inline: 0.25rem;
+		padding-block: 0.25rem;
+		display: flex;
+		align-items: center;
+	}
+`;
+const ModalContent = styled(Modal.Content)`
+	margin: 0;
+	padding: 0;
 `;
 
 const [TitleBarMinimize, TitleBarMaximize, TitleBarClose] = [

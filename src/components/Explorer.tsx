@@ -11,10 +11,13 @@ import type { TreeProps } from "@react95/core/Tree";
 import { useAtom } from "jotai";
 import { repoDidState, repoRecordsState, repoSizeState } from "../state";
 
-export function Explorer() {
-	const [repoDid] = useAtom(repoDidState);
-	const title = repoDid ? `Exploring ${repoDid}` : "Exploring the ATmosphere";
-
+export function Explorer({
+	title,
+	setVisible,
+}: {
+	title: string;
+	setVisible: (visible: boolean) => void;
+}) {
 	return (
 		<ModalWithLargeTitleBar
 			icon={<Explorer101 variant="16x16_4" />}
@@ -22,7 +25,7 @@ export function Explorer() {
 			titleBarOptions={[
 				<TitleBarMinimize />,
 				<TitleBarMaximize />,
-				<TitleBarClose />,
+				<TitleBarClose onClick={() => setVisible(false)} />,
 			]}
 		>
 			<ModalContent
@@ -234,7 +237,7 @@ const ModalContent = styled(Modal.Content)`
 `;
 
 const [TitleBarMinimize, TitleBarMaximize, TitleBarClose] = [
-	TitleBar.Minimize,
+	Modal.Minimize,
 	TitleBar.Maximize,
 	TitleBar.Close,
 ].map(

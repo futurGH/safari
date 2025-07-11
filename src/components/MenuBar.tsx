@@ -1,13 +1,24 @@
-import { List } from "@react95/core";
+import { List, Button } from "@react95/core";
 import styled from "styled-components";
+import { useModalVisibility } from "../state";
 
 export function MenuBar() {
+	const [, setShowImportModal] = useModalVisibility("importRepo");
+
 	return (
 		<MenuBarList>
 			<ListItem>
 				File
 				<List>
-					<ListItem>Import</ListItem>
+					<ListItem>
+						<ListItemButton
+							onClick={() =>
+								setTimeout(() => setShowImportModal(true), 0)
+							}
+						>
+							Import
+						</ListItemButton>
+					</ListItem>
 					<List.Divider />
 					<ListItem aria-disabled>Create Shortcut</ListItem>
 					<ListItem aria-disabled>Delete</ListItem>
@@ -68,6 +79,10 @@ const MenuBarList = styled(List)`
 		width: 0;
 	}
 
+	& li:has(> button):hover {
+		color: white;
+	}
+
 	& ul {
 		top: 2rem;
 		left: 0.25rem;
@@ -83,5 +98,25 @@ const ListItem = styled(List.Item)`
 	&[aria-disabled] {
 		color: gray;
 		cursor: not-allowed;
+	}
+`;
+
+const ListItemButton = styled(Button)`
+	width: 100%;
+	height: 100%;
+	outline: none;
+	box-shadow: none;
+	background-color: unset;
+	color: unset;
+	padding: 0;
+	text-align: left;
+
+	&:hover,
+	&:focus,
+	&:active {
+		padding: 0;
+		outline: none;
+		box-shadow: none;
+		background-color: unset;
 	}
 `;

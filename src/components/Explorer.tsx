@@ -5,8 +5,8 @@ import {
 	Explorer100,
 	Explorer101,
 	Folder,
-	FileSettings,
 	RecycleEmpty,
+	Bat,
 } from "@react95/icons";
 import styled from "styled-components";
 import { MenuBar } from "./MenuBar";
@@ -150,6 +150,8 @@ function DirectoryListing() {
 
 function FileListing() {
 	const [repoName] = useAtom(repoNameState);
+	const [selectedPath] = useAtom(selectedPathState);
+	const dirname = selectedPath.at(-1) ?? repoName;
 
 	return (
 		<Frame
@@ -164,8 +166,17 @@ function FileListing() {
 				boxShadow="$in"
 				paddingBlock="$2"
 				paddingInline="$6"
+				whiteSpace="nowrap"
 			>
-				Contents of{repoName ? ` ${repoName}` : "..."}
+				<span
+					style={{
+						display: "block",
+						overflow: "hidden",
+						textOverflow: "ellipsis",
+					}}
+				>
+					Contents of{dirname ? ` '${dirname}'` : "..."}
+				</span>
 			</Frame>
 			<Frame
 				w="100%"
@@ -225,10 +236,8 @@ function FilesList() {
 				}
 
 				const createdAt =
-					file.type === "file"
-						? file.createdAt
-							? new Date(file.createdAt).toLocaleString()
-							: "N/A"
+					file.type === "file" && file.createdAt
+						? new Date(file.createdAt).toLocaleString()
 						: "";
 
 				const onDoubleClick: MouseEventHandler | undefined =
@@ -243,7 +252,7 @@ function FilesList() {
 							tabIndex={0}
 							onDoubleClick={onDoubleClick}
 						>
-							<Icon /> {file.label}
+							<Icon variant="16x16_4" /> {file.label}
 						</FileNameCell>
 						<FilesCell style={{ justifyContent: "flex-end" }}>
 							{size}
@@ -349,9 +358,12 @@ const fileStructureToDirectoryTree = (
 const DirectoryListingContainer = styled(Frame)`
 	user-select: none;
 
-	& label:focus {
-		background-color: var(--r95-color-anchor);
-		color: white;
+	& label {
+		white-space: nowrap;
+		&:focus {
+			background-color: var(--r95-color-anchor);
+			color: white;
+		}
 	}
 
 	& svg {
@@ -418,7 +430,7 @@ const FileNameCell = styled(FilesCell)`
 	}
 `;
 
-const FileIcon = styled(FileSettings)`
+const FileIcon = styled(Bat)`
 	width: 1.25rem;
 	height: 1.25rem;
 	aspect-ratio: 1;

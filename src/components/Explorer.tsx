@@ -1,9 +1,11 @@
+import { Fragment, type MouseEventHandler } from "react";
 import { Button, Frame, Tree } from "@react95/core";
 import {
 	Desktop,
 	Explorer100,
 	Explorer101,
 	Folder,
+	FileSettings,
 	RecycleEmpty,
 } from "@react95/icons";
 import styled from "styled-components";
@@ -14,8 +16,8 @@ import {
 	repoNameState,
 	repoRecordsState,
 	repoSizeState,
-	selectedDirectoryState,
-	type RecordData,
+	selectedPathState,
+	type FileStructure,
 } from "../state";
 import { Modal } from "./Modal";
 
@@ -81,7 +83,7 @@ export function Explorer({
 function DirectoryListing() {
 	const [repoName] = useAtom(repoNameState);
 	const [records] = useAtom(repoRecordsState);
-	const [, setSelectedDirectory] = useAtom(selectedDirectoryState);
+	const [, setSelectedPath] = useAtom(selectedPathState);
 
 	const rootNode = {
 		id: 0,
@@ -94,11 +96,7 @@ function DirectoryListing() {
 			id: 0,
 			label: repoName ?? "The ATmosphere",
 			icon: <Explorer100 variant="16x16_4" />,
-			children: recordsToDirectoryStructure(
-				records,
-				(parts) => setSelectedDirectory(parts.join(".")),
-				2,
-			),
+			children: fileStructureToDirectoryTree(records, setSelectedPath, 2),
 		},
 		{
 			id: 1,
@@ -122,21 +120,29 @@ function DirectoryListing() {
 			>
 				All Folders
 			</Frame>
-			<Frame w="100%" h="100%" padding="$1" boxShadow="$in">
-				<Frame
+			<Frame
+				w="100%"
+				h="100%"
+				flex="1 1 0"
+				minHeight="0"
+				padding="$1"
+				boxShadow="$in"
+				overflow="auto"
+			>
+				<DirectoryListingContainer
 					w="100%"
 					h="100%"
 					bgColor="#FCFCFC"
 					boxShadow="$in"
 					overflow="scroll"
 				>
-					<DirectoryListingTree
-						w="110%"
+					<Tree
+						w="min-content"
 						h="110%"
 						root={rootNode}
 						data={nodes}
 					/>
-				</Frame>
+				</DirectoryListingContainer>
 			</Frame>
 		</Frame>
 	);
@@ -169,13 +175,7 @@ function FileListing() {
 				boxShadow="$in"
 				overflow="auto"
 			>
-				<Frame
-					w="100%"
-					h="100%"
-					bgColor="#FCFCFC"
-					boxShadow="$in"
-					overflow="scroll"
-				>
+				<Frame w="100%" h="100%" bgColor="#FCFCFC" boxShadow="$in">
 					<FilesList />
 				</Frame>
 			</Frame>
@@ -184,61 +184,76 @@ function FileListing() {
 }
 
 function FilesList() {
-	const [selectedDirectory] = useAtom(selectedDirectoryState);
-	const [records] = useAtom(repoRecordsState);
+	const [selectedPath, setSelectedPath] = useAtom(selectedPathState);
+	const [fileStructure] = useAtom(repoRecordsState);
 
-	const files = selectedDirectory
-		? records.filter((record) =>
-				record.collection.startsWith(selectedDirectory),
-			)
-		: [];
+	const files = getFilesForPath(fileStructure, selectedPath);
 
 	return (
-		<FilesTable>
-			<FilesTHead>
-				<FilesTR>
-					<FilesTH>
-						<FilesHeaderButton>Name</FilesHeaderButton>
-					</FilesTH>
-					<FilesTH>
-						<FilesHeaderButton style={{ textAlign: "right" }}>
-							Size
-						</FilesHeaderButton>
-					</FilesTH>
-					<FilesTH>
-						<FilesHeaderButton>Type</FilesHeaderButton>
-					</FilesTH>
-					<FilesTH>
-						<FilesHeaderButton>Modified</FilesHeaderButton>
-					</FilesTH>
-				</FilesTR>
-			</FilesTHead>
-			<FilesTBody>
-				{files.map((file) => {
-					const collectionType = file.collection.split(".").pop()!;
-					const type =
-						collectionType[0].toUpperCase() +
-						collectionType.slice(1);
-					const createdAt = file.createdAt
-						? new Date(file.createdAt).toLocaleString()
-						: "N/A";
-					const size =
-						file.size < 1024
-							? `${file.size}B`
-							: `${(file.size / 1024).toFixed(0)}KB`;
-					return (
-						<FilesTR key={file.rkey}>
-							<FilesTD>{file.rkey}</FilesTD>
-							<FilesTD style={{ textAlign: "right" }}>
-								{size}
-							</FilesTD>
-							<FilesTD>{type} Record</FilesTD>
-							<FilesTD>{createdAt}</FilesTD>
-						</FilesTR>
-					);
-				})}
-			</FilesTBody>
-		</FilesTable>
+		<FilesContainer>
+			<FilesHeaderCell>
+				<FilesHeaderButton>Name</FilesHeaderButton>
+			</FilesHeaderCell>
+			<FilesHeaderCell>
+				<FilesHeaderButton style={{ textAlign: "right" }}>
+					Size
+				</FilesHeaderButton>
+			</FilesHeaderCell>
+			<FilesHeaderCell>
+				<FilesHeaderButton>Type</FilesHeaderButton>
+			</FilesHeaderCell>
+			<FilesHeaderCell>
+				<FilesHeaderButton>Modified</FilesHeaderButton>
+			</FilesHeaderCell>
+			{files.map((file) => {
+				const Icon = file.type === "file" ? FileIcon : FolderIcon;
+
+				const size =
+					file.size < 1024
+						? `${file.size}B`
+						: `${(file.size / 1024).toFixed(0)}KB`;
+
+				let type: string;
+				if (file.type === "file") {
+					const lastSegment = file.collection.split(".").pop()!;
+					type =
+						lastSegment[0].toUpperCase() +
+						lastSegment.slice(1) +
+						" Record";
+				} else {
+					type = "Folder";
+				}
+
+				const createdAt =
+					file.type === "file"
+						? file.createdAt
+							? new Date(file.createdAt).toLocaleString()
+							: "N/A"
+						: "";
+
+				const onDoubleClick: MouseEventHandler | undefined =
+					file.type === "file"
+						? undefined
+						: () => setSelectedPath([...selectedPath, file.label]);
+
+				return (
+					<Fragment key={file.label}>
+						<FileNameCell
+							as="label"
+							tabIndex={0}
+							onDoubleClick={onDoubleClick}
+						>
+							<Icon /> {file.label}
+						</FileNameCell>
+						<FilesCell style={{ justifyContent: "flex-end" }}>
+							{size}
+						</FilesCell>
+						<FilesCell>{type}</FilesCell>
+						<FilesCell>{createdAt}</FilesCell>
+					</Fragment>
+				);
+			})}
+		</FilesContainer>
 	);
 }
 
@@ -281,82 +296,95 @@ function InfoBar() {
 	);
 }
 
-function recordsToDirectoryStructure(
-	records: RecordData[],
+const getFilesForPath = (
+	files: FileStructure,
+	path: string[],
+): FileStructure => {
+	let current = files;
+	for (const part of path) {
+		const next = current.find((file) => file.label === part);
+		if (!next) return [];
+		if (next.type === "file") return [next];
+		current = next.children;
+	}
+	return current;
+};
+
+const fileStructureToDirectoryTree = (
+	files: FileStructure,
 	onClick: (path: string[]) => void,
-	startingId = 0,
-) {
-	let id = startingId;
-	return records.reduce<TreeProps["data"]>((acc, record) => {
-		const { collection } = record;
-		const [nsid1, nsid2, ..._nsidParts] = collection.split(".");
-		const nsidParts = [`${nsid1}.${nsid2}`, ..._nsidParts];
-		let currentLevel = acc;
-		const currentPath: string[] = [];
+	id = 0,
+	path: string[] = [],
+) => {
+	const directoryTree: TreeProps["data"] = [];
 
-		for (let i = 0; i < nsidParts.length; i++) {
-			const part = nsidParts[i];
-			currentPath.push(part);
+	for (const file of files) {
+		const { label, type } = file;
+		const filePath = [...path, label];
 
-			let existingDir = currentLevel.find((dir) => dir.label === part);
-
-			if (!existingDir) {
-				existingDir = {
-					id: id++,
-					label: part,
-					children: [],
-					onClick: () => onClick([...currentPath]),
-				};
-
-				// qdd folder icon for the last level
-				if (i === nsidParts.length - 1) {
-					existingDir.icon = <Folder variant="16x16_4" />;
-				}
-
-				currentLevel.push(existingDir);
-			}
-
-			if (i < nsidParts.length - 1) {
-				currentLevel = existingDir.children!;
-			}
+		if (type === "file") {
+			directoryTree.push({
+				id: id++,
+				label,
+			});
+		} else {
+			const children = fileStructureToDirectoryTree(
+				file.children,
+				onClick,
+				id,
+				filePath,
+			);
+			directoryTree.push({
+				id: id++,
+				label,
+				onClick: () => onClick(filePath),
+				children,
+			});
 		}
+	}
 
-		return acc;
-	}, []);
-}
+	return directoryTree;
+};
 
-const DirectoryListingTree = styled(Tree)`
+const DirectoryListingContainer = styled(Frame)`
+	user-select: none;
+
 	& label:focus {
 		background-color: var(--r95-color-anchor);
 		color: white;
 	}
+
+	& svg {
+		width: 1.5rem;
+		height: 1.5rem;
+		aspect-ratio: 1;
+		margin-right: 0.25rem;
+	}
 `;
 
-const FilesTable = styled.table`
+const FilesContainer = styled.div`
+	user-select: none;
+
 	width: 100%;
 	height: 100%;
 	min-height: 16rem;
 	display: grid;
 	grid-template-columns: repeat(4, minmax(min-content, 40%));
-	grid-auto-rows: min-content;
+	grid-template-rows: repeat(auto-fit, minmax(1.5rem, min-content));
+	overflow-y: auto;
 `;
 
-const FilesTHead = styled.thead`
-	display: contents;
-`;
-const FilesTBody = styled.tbody`
-	display: contents;
-`;
-const FilesTR = styled.tr`
-	display: contents;
-`;
-const FilesTH = styled.th`
-	display: contents;
-`;
-const FilesTD = styled.td`
+const FilesHeaderCell = styled.div`
+	display: flex;
+	width: 100%;
 	height: min-content;
-	white-space: nowrap;
-	padding-inline: 0.5rem;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	& > button {
+		width: 100%;
+		align-self: start;
+	}
 `;
 const FilesHeaderButton = styled(Button)`
 	height: min-content;
@@ -368,4 +396,37 @@ const FilesHeaderButton = styled(Button)`
 		padding-inline: 0.5rem;
 		padding-block: 0.1rem;
 	}
+`;
+
+const FilesCell = styled.div`
+	display: inline-flex;
+	align-items: center;
+	height: min-content;
+	white-space: nowrap;
+	padding-inline: 0.5rem;
+`;
+
+const FileNameCell = styled(FilesCell)`
+	height: 1.67rem;
+	box-sizing: border-box;
+
+	&:focus {
+		background-color: var(--r95-color-anchor);
+		color: white;
+		border-width: 2px;
+		border-style: dotted;
+	}
+`;
+
+const FileIcon = styled(FileSettings)`
+	width: 1.25rem;
+	height: 1.25rem;
+	aspect-ratio: 1;
+	margin-right: 0.25rem;
+`;
+const FolderIcon = styled(Folder)`
+	width: 1.25rem;
+	height: 1.25rem;
+	aspect-ratio: 1;
+	margin-right: 0.25rem;
 `;

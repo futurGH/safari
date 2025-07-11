@@ -1,21 +1,23 @@
 import { atom, useAtom } from "jotai";
 import { useCallback, useMemo } from "react";
 
-export type RecordData = {
-	rkey: string;
-	collection: string;
-	size: number;
-	createdAt?: number;
-	record: unknown;
-};
+export type FileStructure = Array<
+	{ type: "folder"; label: string; size: number; children: FileStructure } | {
+		type: "file";
+		label: string;
+		collection: string;
+		size: number;
+		createdAt?: number;
+	}
+>;
 
-export const repoRecordsState = atom<Array<RecordData>>([]);
+export const repoRecordsState = atom<FileStructure>([]);
 
 export const repoSizeState = atom<number | null>(null);
 
 export const repoNameState = atom<string | null>(null);
 
-export const selectedDirectoryState = atom<string | null>(null);
+export const selectedPathState = atom<string[]>([]);
 
 export const visibleModalsState = atom<string[]>([]);
 

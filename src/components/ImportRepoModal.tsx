@@ -9,7 +9,7 @@ import {
 	repoNameState,
 	repoRecordsState,
 	repoSizeState,
-	type RecordData,
+	type FileStructure,
 } from "../state";
 import {
 	CompositeDidDocumentResolver,
@@ -64,9 +64,38 @@ export function ImportRepoModal({
 			const repo = RepoReader.fromUint8Array(bytes);
 
 			let size = 0;
-			const records: Array<RecordData> = [];
+			const records: FileStructure = [];
+
+			const findOrCreateDirectory = (collection: string) => {
+				const [nsid1, nsid2, ...restSegments] = collection.split(".");
+				const segments = [`${nsid1}.${nsid2}`, ...restSegments];
+
+				let current = records;
+				for (const segment of segments) {
+					const existing = current.find(
+						(item) => item.label === segment,
+					);
+					if (!existing) {
+						current.push({
+							label: segment,
+							type: "folder",
+							size: 0,
+							children: [],
+						});
+					}
+					current = current.find(
+						(
+							item,
+						): item is FileStructure[number] & { type: "folder" } =>
+							item.label === segment && item.type === "folder",
+					)!.children;
+				}
+				return current;
+			};
+
 			for await (const entry of repo) {
 				size += entry.bytes.byteLength;
+
 				let createdAt = undefined;
 				if (
 					entry.record &&
@@ -78,14 +107,37 @@ export function ImportRepoModal({
 					).getTime();
 					if (!isNaN(date)) createdAt = date;
 				}
-				records.push({
-					rkey: entry.rkey,
+
+				const directory = findOrCreateDirectory(entry.collection);
+				directory.push({
+					type: "file",
+					label: entry.rkey,
 					collection: entry.collection,
 					size: entry.bytes.byteLength,
 					createdAt,
-					record: entry.record,
 				});
 			}
+
+			function setFolderSizes(directory: FileStructure) {
+				let size = 0;
+				for (const item of directory) {
+					if (item.type === "folder") {
+						size = item.children.reduce((acc, child) => {
+							if (child.type === "folder") {
+								return acc + setFolderSizes([child]);
+							} else {
+								return acc + child.size;
+							}
+						}, 0);
+					} else {
+						size = item.size;
+					}
+					item.size = size;
+				}
+				return size;
+			}
+			setFolderSizes(records);
+
 			setRepoRecords(records);
 			setRepoSize(size);
 			setShow(false);
@@ -259,6 +311,7 @@ const Prompt = styled.p`
 	margin-bottom: 1rem;
 	font-size: 1rem;
 	line-height: 1.25;
+	overflow-wrap: break-all;
 `;
 
 const FileInput = styled.input`

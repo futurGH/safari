@@ -8,8 +8,13 @@ import {
 import styled from "styled-components";
 import { MenuBar } from "./MenuBar";
 import type { TreeProps } from "@react95/core/Tree";
+import { useAtom } from "jotai";
+import { repoDidState, repoRecordsState, repoSizeState } from "../state";
 
 export function Explorer() {
+	const [repoDid] = useAtom(repoDidState);
+	const title = repoDid ? `Exploring ${repoDid}` : "Exploring the ATmosphere";
+
 	return (
 		<Center>
 			<Frame
@@ -23,7 +28,7 @@ export function Explorer() {
 				<StyledTitleBar
 					active
 					icon={<Explorer101 variant="16x16_4" />}
-					title="Exploring the ATmosphere"
+					title={title}
 					alignItems="center"
 					paddingBlock="$12"
 				>
@@ -115,6 +120,8 @@ function DirectoryListing() {
 }
 
 function FileListing() {
+	const [repoDid] = useAtom(repoDidState);
+
 	return (
 		<Frame
 			w={{ mobile: "100%", tablet: "70%" }}
@@ -129,7 +136,7 @@ function FileListing() {
 				paddingBlock="$2"
 				paddingInline="$6"
 			>
-				Contents of...
+				Contents of{repoDid ? ` ${repoDid}` : "..."}
 			</Frame>
 			<Frame w="100%" h="100%" padding="$1" boxShadow="$in">
 				<Frame
@@ -186,6 +193,9 @@ function FilesList() {
 }
 
 function InfoBar() {
+	const [records] = useAtom(repoRecordsState);
+	const [repoSize] = useAtom(repoSizeState);
+
 	return (
 		<Frame
 			w="100%"
@@ -203,7 +213,7 @@ function InfoBar() {
 				paddingBlock="$2"
 				paddingInline="$6"
 			>
-				999 object(s)
+				{records.length} object(s)
 			</Frame>
 			<Frame
 				w="100%"
@@ -211,7 +221,7 @@ function InfoBar() {
 				paddingBlock="$2"
 				paddingInline="$6"
 			>
-				81.92MB (Disk free space: 8192MB)
+				{repoSize ?? 0}MB (Disk free space: 8192MB)
 			</Frame>
 		</Frame>
 	);

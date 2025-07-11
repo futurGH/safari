@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@react95/core": "^9.5.2",
 		"@react95/icons": "^2.2.0",
+		"jotai": "^2.12.5",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"styled-components": "^6.1.19"

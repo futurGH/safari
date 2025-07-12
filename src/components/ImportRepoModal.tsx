@@ -31,7 +31,7 @@ const didResolver = new CompositeDidDocumentResolver({
 const handleResolver = new CompositeHandleResolver({
 	methods: {
 		dns: new DohJsonHandleResolver({
-			dohUrl: "https://cloudflare-dns.com/dns-query",
+			dohUrl: "https://dns.w3ctag.org/dns-query",
 		}),
 		http: new WellKnownHandleResolver(),
 	},

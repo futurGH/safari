@@ -62,7 +62,18 @@ export function MenuBar() {
 				Help
 				<List>
 					<ListItem aria-disabled>Help Topics</ListItem>
-					<ListItem>About Windows 95</ListItem>
+					<ListItem
+						onClick={() =>
+							window
+								.open(
+									"https://github.com/futurGH/safari",
+									"_blank",
+								)
+								?.focus()
+						}
+					>
+						About Windows 95
+					</ListItem>
 				</List>
 			</ListItem>
 		</MenuBarList>

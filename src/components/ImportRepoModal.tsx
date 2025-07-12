@@ -232,9 +232,21 @@ export function ImportRepoModal({
 				w={{ mobile: "90vw", tablet: "640px" }}
 				paddingInline={{ mobile: "1rem", tablet: "2rem" }}
 				paddingBlock={{ mobile: "0.75rem", tablet: "1.5rem" }}
+				overflow="hidden"
 			>
-				<Wmsui323911 width="3rem" height="3rem" variant="32x32_4" />
-				<Frame display="flex" flexDirection="column" gap="1rem">
+				<Wmsui323911
+					style={{ flexShrink: 0 }}
+					width="3rem"
+					height="3rem"
+					variant="32x32_4"
+				/>
+				<Frame
+					flexGrow={1}
+					minWidth={0}
+					display="flex"
+					flexDirection="column"
+					gap="1rem"
+				>
 					<Prompt>
 						Enter the DID or handle of the repository you want to
 						import. Or, import a CAR file.
@@ -274,7 +286,6 @@ export function ImportRepoModal({
 						flexDirection="row"
 						alignItems="center"
 						gap="1rem"
-						overflow="hidden"
 					>
 						<Button
 							as="label"
@@ -284,7 +295,17 @@ export function ImportRepoModal({
 						>
 							Import CAR
 						</Button>
-						<span>{file ? file.name : "No file selected"}</span>
+						<span
+							style={{
+								width: "50%",
+								display: "block",
+								whiteSpace: "nowrap",
+								overflow: "hidden",
+								textOverflow: "ellipsis",
+							}}
+						>
+							{file ? file.name : "No file selected"}
+						</span>
 					</Frame>
 					{status && <span>{status}</span>}
 				</Frame>
@@ -306,12 +327,12 @@ const ModalContent = styled(Modal.Content)`
 	}
 `;
 
-const Prompt = styled.p`
+const Prompt = styled.span`
+	width: 100%;
 	margin-top: 0;
 	margin-bottom: 1rem;
 	font-size: 1rem;
 	line-height: 1.25;
-	overflow-wrap: break-all;
 `;
 
 const FileInput = styled.input`

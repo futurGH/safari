@@ -101,6 +101,7 @@ const ListItem = styled(List.Item)`
 	}
 `;
 
+// @ts-expect-error — Union type too complex to represent
 const ListItemButton = styled(Button)`
 	width: 100%;
 	height: 100%;

@@ -15,12 +15,36 @@ import {
 	CompositeDidDocumentResolver,
 	CompositeHandleResolver,
 	DohJsonHandleResolver,
+	FailedHandleResolutionError,
 	PlcDidDocumentResolver,
 	WebDidDocumentResolver,
 	WellKnownHandleResolver,
+	type HandleResolver,
 } from "@atcute/identity-resolver";
 import { Client, simpleFetchHandler } from "@atcute/client";
 import type {} from "@atcute/atproto";
+
+class MultiDohHandleResolver implements HandleResolver {
+	private resolvers: DohJsonHandleResolver[];
+
+	constructor(urls: string[]) {
+		this.resolvers = urls.map(
+			(url) => new DohJsonHandleResolver({ dohUrl: url }),
+		);
+	}
+
+	async resolve(handle: `${string}.${string}`) {
+		for (const resolver of this.resolvers) {
+			try {
+				const result = await resolver.resolve(handle);
+				if (result) return result;
+			} catch (e) {
+				console.error(e);
+			}
+		}
+		throw new FailedHandleResolutionError(handle);
+	}
+}
 
 const didResolver = new CompositeDidDocumentResolver({
 	methods: {
@@ -30,9 +54,11 @@ const didResolver = new CompositeDidDocumentResolver({
 });
 const handleResolver = new CompositeHandleResolver({
 	methods: {
-		dns: new DohJsonHandleResolver({
-			dohUrl: "https://dns.w3ctag.org/dns-query",
-		}),
+		dns: new MultiDohHandleResolver([
+			"https://dns.w3ctag.org/dns-query",
+			"https://cloudflare-dns.com/dns-query",
+			"https://dns.google/resolve",
+		]),
 		http: new WellKnownHandleResolver(),
 	},
 });
@@ -211,7 +237,8 @@ export function ImportRepoModal({
 						} else if (input) {
 							setRepoName(input);
 							setStatus("Downloading repository...");
-							fetchRepo().catch(() => {
+							fetchRepo().catch((e) => {
+								console.error(e);
 								setStatus(`Failed to download repository.`);
 							});
 						} else {

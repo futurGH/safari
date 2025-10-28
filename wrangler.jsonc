@@ -1,0 +1,13 @@
+{
+	"name": "safari",
+	"compatibility_date": "2025-07-12",
+	"assets": {
+		"directory": "./dist",
+	},
+	"routes": [
+		{
+			"pattern": "safari.futur.blue",
+			"custom_domain": true,
+		},
+	],
+}
